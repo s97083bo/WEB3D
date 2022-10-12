@@ -1,0 +1,179 @@
+<html>
+
+<style>
+   
+</style>
+
+<body>
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <style>
+    </style>
+  </head>
+
+  <body>
+    <h1> 3W3D HW1</h1>
+    <button id='toggle1'>light is ON</button>
+    <div class="centerImage">
+      <img src="https://images.669pic.com/element2/77a8055ccfd56ab477ef96089e5135be.jpg">
+      
+<img src="https://down.imgspng.com/download/0720/star_PNG41485.png"style=" width : 150px ; height : 150px ; top : 90px ; left : 230px; ; position : absolute ; z-index : 1" >
+      <div id='bkgd' style="position:absolute; top:25vh; left: 7vw; width:65vw; height:53vh;border-radius:100px; "></div>
+
+      <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+      <script>
+      
+
+      </script>
+    </div>
+  </body>
+
+</html>
+
+
+</body>
+
+<script>
+        var powerstate = true;
+        var blinkstate = false;
+        
+        $('#toggle1').click(function() {
+	var that = this;
+          powerstate = !powerstate;
+          if (powerstate === false) {
+            $('#toggle1').text('light is OFF')
+          }
+          else {
+            $('#toggle1').html('<mark>light is ON</mark>')
+         	  for(let i=0;i<10;i++){
+        			lamparray[i].toggle()   
+        }
+            // window.setTimeout(function(){ll.toggle();},0);                 
+          }
+        });
+        class Lamp {
+
+          constructor(name) {
+          	var that = this;
+            this.name = name + Lamp.id++;
+            
+            this.myStatus = false;
+						
+            let el = document.createElement('div');
+            
+            el.id = this.name;
+           // $('#' + this.name).css('border-radius', "100px");
+            let text = document.createTextNode('');
+            el.appendChild(text);
+            let bkgd = document.getElementById('bkgd');
+            bkgd.appendChild(el);
+            this.hue = Math.random() * 360;
+
+            // styles
+            el.setAttribute("style", `background-color: hsl(${this.hue}, 90%, 50%); width:30px;height:30px;border-radius:100%;`);
+            
+            this.left = Math.random() ;
+            this.top =Math.random();
+            
+            el.style.position = "absolute";
+            el.style.left = this.left ;
+            el.style.top = this.top;
+          }
+
+          toggle() {
+            //sleep(Math.random() * 700);
+						var that = this;
+            this.myStatus = !this.myStatus;
+            if (this.myStatus === true) {
+            if(powerstate===true){
+              $('#' + this.name).css('backgroundColor', `hsl(${this.hue},90%,80%)`);
+             // $('#' + this.name).text(this.name + ' is on');
+            }} else {
+              $('#' + this.name).css('backgroundColor', `hsl(${this.hue},90%,20%)`);
+              //$('#' + this.name).text(this.name + ' is off');
+            }
+            
+            if (powerstate == true) {
+            	
+              window.setTimeout(function(){that.toggle();},Math.random() * 700);							
+            }
+						else{
+            if(this.myStatus === false){
+            
+            $('#' + this.name).css('backgroundColor', `hsl(${this.hue},90%,20%)`);
+            }
+            } 
+
+
+          }
+
+          startBlink() {
+            var that = this;
+           //setInterval(function() {
+              that.toggle();
+							
+            //}, 500);
+          }
+
+        }
+        Lamp.id = 0; // class variable
+       
+        let lamparray=[];
+        
+     /*   
+        var light1 = new Lamp('light1');
+        var light2 = new Lamp('light2');
+        var light3 = new Lamp('light3');
+        var light4 = new Lamp('light4');
+        var light5 = new Lamp('light5');
+        var light6 = new Lamp('light6');
+        var light7 = new Lamp('light7');
+        var light8 = new Lamp('light8');
+        var light9 = new Lamp('light9');
+        var light10 = new Lamp('light10');
+        
+        lamparray=[light1,light2,light3,light4,light5,light6,light7,light8,light9,light10];*/
+        
+        for(let i=0;i<10;i++){
+        var ll = new Lamp('light');
+        lamparray.push(ll);
+        ll.startBlink();
+        }
+        let j=0;
+        chooseposition();  
+				function chooseposition(){//讓燈不要太靠近的函式
+        for(let i=0;i<10;i++){
+        	for(j=0;j<10;j++){      //每個燈都要跟所有燈比距離 看有沒有太近
+          let z=Math.sqrt((lamparray[i].left-lamparray[j].left)*(lamparray[i].left-lamparray[j].left)+(lamparray[i].top-lamparray[j].top)*(lamparray[i].top-lamparray[j].top));//x平+y平開根號
+          	if(z<0.2&&j!=i){            //如果太近
+            lamparray[i].left = Math.random() ;
+            lamparray[i].top = Math.random() ;  //抽一個地方
+            i--;        //這位置要重新和所有人比一次
+						break;       //J不用做了跳掉
+            }            
+          }
+          if(j==10){   //如果9個都比完 合格  
+          let name='light'+i;  //設位置
+          $('#'+name).css("top",lamparray[i].top*290);
+          $('#'+name).css("left",lamparray[i].left*400);
+          
+        }
+          }
+        
+          
+        }
+       /* function sleep(milliseconds) {       //sleep會讓全部停下來
+          var start = new Date().getTime();
+          for (var i = 0; i < 1e7; i++) {
+            if ((new Date().getTime() - start) > milliseconds) {
+              break;
+            }
+          }
+        }*/
+
+</script>
+
+</html>
