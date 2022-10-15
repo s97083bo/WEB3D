@@ -23,20 +23,7 @@
       <div id='bkgd' style="position:absolute; top:25vh; left: 7vw; width:65vw; height:53vh;border-radius:100px; "></div>
 
       <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-
       <script>
-      
-
-      </script>
-    </div>
-  </body>
-
-</html>
-
-
-</body>
-
-<script>
         var powerstate = true;
         var blinkstate = false;
         
@@ -146,7 +133,7 @@
         chooseposition();  
 				function chooseposition(){//讓燈不要太靠近的函式
         for(let i=0;i<10;i++){
-        	for(j=0;j<10;j++){      //每個燈都要跟所有燈比距離 看有沒有太近
+        	for(j=0;j<i;j++){      //每個燈都要跟所有燈比距離 看有沒有太近
           let z=Math.sqrt((lamparray[i].left-lamparray[j].left)*(lamparray[i].left-lamparray[j].left)+(lamparray[i].top-lamparray[j].top)*(lamparray[i].top-lamparray[j].top));//x平+y平開根號
           	if(z<0.2&&j!=i){            //如果太近
             lamparray[i].left = Math.random() ;
@@ -155,7 +142,7 @@
 						break;       //J不用做了跳掉
             }            
           }
-          if(j==10){   //如果9個都比完 合格  
+          if(j==i){   //如果9個都比完 合格  
           let name='light'+i;  //設位置
           $('#'+name).css("top",lamparray[i].top*290);
           $('#'+name).css("left",lamparray[i].left*400);
@@ -174,6 +161,16 @@
           }
         }*/
 
-</script>
+
+      </script>
+    </div>
+  </body>
+
+</html>
+
+
+</body>
+
+
 
 </html>
