@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--<meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">-->
+  <title>UwU</title>
+<link rel="icon" href="00.jpg">
+<style>
+#count{
+  position: absolute;
+  <!--top:150px;
+}
+
+button{
+  
+  background-color:#5cc3f7;
+  width: 90px;
+  height: 50px;
+  border-radius: 50px;
+}
+.buttonpos{
+  top : 230px ; 
+  left : 300px; 
+  position : absolute ; 
+}
+
+.input{
+ border-radius:5px;
+}
+.vbox {
+  width: 15em;
+  border: 1px solid #333;
+  box-shadow: 5px 5px 4px #444;
+  padding: 8px 12px;
+  border-radius:20px;
+  background-image: linear-gradient(180deg, #ffffff, #ffcbe3, #fc90cc);
+}
+.wbox {
+  width: 15em;
+  border: 1px solid #333;
+  box-shadow: 5px 5px 4px #444;
+  padding: 8px 12px;
+  border-radius:20px;
+  background-image: linear-gradient(180deg, #ffffff, #80fffb, #39faf3);
+}
+.ansbox {
+  top : 10px ; 
+  left : 300px; 
+  position : absolute ; 
+  width: 15em;
+  border: 1px solid #333;
+  box-shadow: 5px 5px 4px #444;
+  padding: 8px 12px;
+  border-radius:20px;
+  background-image: linear-gradient(180deg, #ffffff, #5aff9c, #1ef77c);
+}
+.btn:hover{
+  
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="vbox">
+<h2>V</h2>
+  <label for="">x:</label>
+<input id="vx" class="input" type="unmber">
+  <br>
+  <label for="">y:</label>
+<input id="vy" class="input" type="unmber">
+  <br>
+  <label for="">z:</label>
+<input id="vz" class="input" type="unmber">
+  <br>
+  </div>
+  <div class="wbox">
+  <h2>W</h2> 
+  <label for="">x:</label>
+<input id="wx" class="input" type="unmber">
+  <br>
+  <label for="">y:</label>
+<input id="wy" class="input" type="unmber">
+  <br>
+  <label for="">z:</label>
+<input id="wz" class="input" type="unmber">
+  <br>
+  </div>
+  <br>
+  <div class="ansbox">
+  
+ 
+  <p id="inner">內積為 : </p>
+  <p>外積 </p>
+  <p id="cx">x: </p>
+  <p id="cy">y: </p>
+  <p id="cz">z: </p>
+   </div>
+   
+  <div class="buttonpos">
+  <button id="count" class="btn">給我算</button>
+  
+  <br><br>
+  <p id="vector"></p>
+  <button id="countnormalize" class="btn">正規化的算</button>
+  </div>
+<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script id="jsbin-javascript">
+
+let donormalize=false;
+
+function count (){
+  var vx = $("#vx").val();
+  var vy = $("#vy").val();
+  var vz = $("#vz").val();
+  var wx = $("#wx").val();
+  var wy = $("#wy").val();
+  var wz = $("#wz").val();
+  var result = 0;
+  
+  if(vx == "" || vy == ""||vz==""||wx == "" || wy == ""||wz==""){
+   $("#inner").text("請確認是否輸入完畢");   //check  以免跳錯誤
+  }
+  else{
+  
+  var v = new THREE.Vector3(vx,vy,vz);
+  var w = new THREE.Vector3(wx,wy,wz);
+  var c = new THREE.Vector3();
+  
+  result =v.dot(w);  							//內積
+  c.crossVectors(v,w);						//外積
+  if(donormalize===true){
+  c.normalize();                         
+  }
+  $("#inner").text("內積為 : "+result);
+  //console.log(c); 
+  c.x=Math.round(c.x*10000)/10000;
+  c.y=Math.round(c.y*10000)/10000;        //取小數點後4位
+  c.z=Math.round(c.z*10000)/10000;
+  $("#cx").text("x: "+c.x);
+  $("#cy").text("y: "+c.y);
+  $("#cz").text("z: "+c.z);
+  donormalize=false;
+   }      
+ 
+}
+function count2(){
+donormalize=true;
+count ();
+}
+
+$("#count").click(count);										//偵測按鈕
+$("#countnormalize").click(count2);
+</script>
+
+
+</body>
+</html>
+
