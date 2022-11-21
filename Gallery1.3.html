@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UwU</title>
+<link rel="icon"  href="03.jpg">
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+
+</style>
+</head>
+<body>
+<div id="info">
+
+<button id='switch'>Light ON</button>
+<input type="range" id="slide" oninput="lightAdjustment()" min="0" max="2" value="1.2" step="any">
+<br>
+<button id='design'>design diagram</button>
+<button id='drawbutton'>draw view</button>
+<button id='drawbutton2'>draw2 view</button>
+<button id='clockbutton'>clock view</button>
+<button id='resets'>reset</button>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+</script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+</div>
+</div>
+
+
+<script>
+var camera, scene, renderer, mesh, light, height, thickness, lightswitch = true,
+  x, designswitch = false,
+  diagram, cameradiagram, drawswitch = false,
+  cameradraw, draw, biglight1, drawswitch2,clockswitch=false;
+var keyboard = new KeyboardState();
+var turn = true;
+var angle = 0;
+var Clock;
+var group = new THREE.Group(); //加到一組
+var lightarray = [];
+var posarray = [
+  [3200, -2800],
+  [1600, -2900],
+  [0, -3600],
+  [-2500,-2965],
+  [-3000, -2965],
+  [-3000,-2000],
+  [-2300, -1500],
+  [-3100, -800],
+  [-200,-800],
+  [2600, -800],
+  [2600,-1500]
+];
+
+
+class buildlamp {
+  constructor(posx, posy, posz, target, distance, decay) {
+    var Group = new THREE.Group();
+    var Components1 = new THREE.Mesh(new THREE.CylinderGeometry(30, 55, 90, 15, 1, true), new THREE.MeshLambertMaterial({
+      color: 0xeeeeee,
+      side: THREE.DoubleSide
+    }));
+    Components1.rotation.y = Math.PI / 4;
+    Group.add(Components1);
+    var Components2 = new THREE.Mesh(new THREE.SphereGeometry(25), new THREE.MeshLambertMaterial({
+      color: 0xeeeeee,
+      side: THREE.DoubleSide
+    }));
+    Components2.rotation.y = Math.PI / 4;
+    Group.add(Components2);
+    var spotlight = new THREE.SpotLight(0xffffff, 1.2, distance, 0.8, 0.4, decay);
+    Group.add(spotlight);
+    lightarray.push(spotlight);
+    Group.position.set(posx, posy, posz);
+    spotlight.target = target;
+    return Group;
+  }
+}
+init();
+animate();
+$('#drawbutton').click(function() {
+  reset();
+  gotonear();
+  drawswitch = !drawswitch;
+  if (drawswitch) $('#drawbutton').text('watching draw')
+  else $('#drawbutton').text('draw view')
+})
+$('#drawbutton2').click(function() {
+  reset();
+  gotonear();
+  drawswitch2 = !drawswitch2;
+  if (drawswitch2) $('#drawbutton2').text('watching draw2')
+  else $('#drawbutton2').text('draw2 view')
+})
+$('#design').click(function() {
+  reset();
+  gotonear();
+  designswitch = !designswitch;
+  if (designswitch) $('#design').text('watching diagram')
+  else $('#design').text('design diagram')
+})
+$('#clockbutton').click(function() {
+  reset();
+  gotonear();
+  clockswitch = !clockswitch;
+  if (clockswitch) $('#clockbutton').text('watching clock')
+  else $('#clockbutton').text('clock view')
+})
+$('#switch').click(function() {
+  lightswitch = !lightswitch;
+  if (lightswitch) {
+    $('#switch').text('Light ON')
+    x = document.getElementById("slide").value;
+  } else {
+    $('#switch').text('Light OFF')
+    x = 0;
+  }
+  LightIntensityAssign();
+})
+$('#resets').click(function() {
+  reset();
+})
+
+function reset() {
+
+if (clockswitch === true) {
+    clockswitch = false;
+    $('#clockbutton').text('clock view')
+  }
+  if (designswitch === true) {
+    designswitch = false;
+    $('#design').text('design diagram')
+  }
+  if (drawswitch === true) {
+    drawswitch = false;
+    $('#drawbutton').text('draw view')
+  }
+  if (drawswitch2 === true) {
+    drawswitch2 = false;
+    $('#drawbutton2').text('draw2 view')
+  }
+}
+
+function lightAdjustment() {
+  if (lightswitch === true) {
+    x = document.getElementById("slide").value;
+  } else {
+    x = 0;
+  }
+  LightIntensityAssign();
+}
+
+function LightIntensityAssign() {
+  for (let i = 0; i < lightarray.length; i++) {
+    lightarray[i].intensity = x;
+  }
+}
+
+function init() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 30000);
+  camera.rotation.y = -Math.PI / 2;
+  camera.position.set(0, 3000, 3000);
+  cameradiagram = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+
+  var directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+  directionalLight.position.set(500, 1000, 500);
+  scene.add(directionalLight);
+  var directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.2);
+  directionalLight2.position.set(-500, 1000, -500);
+  scene.add(directionalLight2);
+  var loader = new THREE.TextureLoader();
+  var woodTex = loader.load("https://i.imgur.com/K933O3e.jpg");
+  woodTex.repeat.set(8, 4);
+  woodTex.wrapS = THREE.RepeatWrapping;
+  woodTex.wrapT = THREE.RepeatWrapping;
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(10000, 10000), new THREE.MeshLambertMaterial({
+    map: woodTex
+  }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(-50, 0, 100);
+  scene.add(floor);
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+  document.body.appendChild(renderer.domElement);
+  ///////////////////////////////////////////////////////////
+  height = 1000;
+  thickness = 50;
+  ticketoffice = new THREE.Mesh(new THREE.BoxGeometry(2500, 500, 400), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  ticketoffice.position.set(1500, 250, 300);
+  group.add(ticketoffice)
+  wall1 = new THREE.Mesh(new THREE.BoxGeometry(5000, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall1.position.set(-50, height / 2, -4600);
+  group.add(wall1)
+
+  wall2 = new THREE.Mesh(new THREE.BoxGeometry(1500, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall2.rotation.y = Math.PI / 2;
+  wall2.position.set(-2500, height / 2, -3900);
+  group.add(wall2)
+
+  wall3 = new THREE.Mesh(new THREE.BoxGeometry(1000, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall3.position.set(-3000, height / 2, -4100);
+  group.add(wall3)
+
+  wall4 = new THREE.Mesh(new THREE.BoxGeometry(1800, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall4.rotation.y = Math.PI / 2;
+  wall4.position.set(-3500, height / 2, -3200);
+  group.add(wall4)
+
+  wall5 = new THREE.Mesh(new THREE.BoxGeometry(2000, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall5.position.set(-1500, height / 2, -3800);
+  group.add(wall5)
+
+  wall6 = new THREE.Mesh(new THREE.BoxGeometry(3200, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall6.position.set(2200, height / 2, -3800);
+  group.add(wall6)
+
+  wall7 = new THREE.Mesh(new THREE.BoxGeometry(3400, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall7.rotation.y = Math.PI / 2;
+  wall7.position.set(3800, height / 2, -2100);
+  group.add(wall7)
+
+  wall8 = new THREE.Mesh(new THREE.BoxGeometry(1900, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall8.rotation.y = Math.PI / 2;
+  wall8.position.set(0, height / 2, -2250);
+  group.add(wall8)
+
+  wall9 = new THREE.Mesh(new THREE.BoxGeometry(800, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall9.position.set(-3600, height / 2, -2300);
+  group.add(wall9)
+
+  wall10 = new THREE.Mesh(new THREE.BoxGeometry(2600, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall10.position.set(-1300, height / 2, -2300);
+  group.add(wall10)
+
+  wall11 = new THREE.Mesh(new THREE.BoxGeometry(3100, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall11.rotation.y = Math.PI / 2;
+  wall11.position.set(-4000, height / 2, -750);
+  group.add(wall11)
+
+  wall12 = new THREE.Mesh(new THREE.BoxGeometry(2400, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall12.position.set(1200, height / 2, -1500);
+  group.add(wall12)
+
+  wall13 = new THREE.Mesh(new THREE.BoxGeometry(300, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall13.position.set(3050, height / 2, -1500);
+  group.add(wall13)
+
+  wall14 = new THREE.Mesh(new THREE.BoxGeometry(100, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall14.position.set(3750, height / 2, -1500);
+  group.add(wall14)
+  /*  wall15 = new THREE.Mesh(new THREE.BoxGeometry(2100, height, 200), new THREE.MeshLambertMaterial({
+      color: 0xeeeeee,
+      side: THREE.DoubleSide
+    }));
+    wall15.position.set(-2100, height / 2, -1300);
+    group.add(wall15)
+
+    wall16 = new THREE.Mesh(new THREE.BoxGeometry(2100, height, 200), new THREE.MeshLambertMaterial({
+      color: 0xeeeeee,
+      side: THREE.DoubleSide
+    }));
+    wall16.position.set(-2150, height / 2, -100);
+    group.add(wall16)*/
+  wall17 = new THREE.Mesh(new THREE.BoxGeometry(3100, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall17.position.set(1550, height / 2, -500);
+  group.add(wall17)
+
+  wall18 = new THREE.Mesh(new THREE.BoxGeometry(1000, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall18.rotation.y = Math.PI / 2;
+  wall18.position.set(3050, height / 2, -1000);
+  group.add(wall18)
+
+  wall19 = new THREE.Mesh(new THREE.BoxGeometry(1500, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall19.rotation.y = Math.PI / 2;
+  wall19.position.set(0, height / 2, 50);
+  group.add(wall19)
+
+  wall20 = new THREE.Mesh(new THREE.BoxGeometry(4000, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall20.position.set(-2000, height / 2, 800);
+  group.add(wall20)
+
+  wall21 = new THREE.Mesh(new THREE.BoxGeometry(800, height, thickness), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  wall21.rotation.y = Math.PI / 2;
+  wall21.position.set(2500, height / 2, -4200);
+  group.add(wall21)
+
+  var chair = buildChair();
+  var chair1 = chair.clone();
+  chair1.position.set(2800, 0, -2600);
+  var chair2 = chair.clone();
+  chair2.position.set(1300, 0, -2600);
+  chair2.rotation.y = Math.PI / 2;
+  scene.add(chair1, chair2);
+
+  Showcase1 = new THREE.Mesh(new THREE.CylinderGeometry(100 * 2, 150 * 2, 150 * 2, 4, 1), new THREE.MeshLambertMaterial({
+    color: 0x333333,
+    side: THREE.DoubleSide
+  }));
+  Showcase1.rotation.y = Math.PI / 4;
+  Showcase1.position.set(-3100, 150, -100);
+  group.add(Showcase1)
+
+  torusKnot1 = new THREE.Mesh(new THREE.TorusKnotGeometry(140, 44, 23, 3, 11, 1), new THREE.MeshLambertMaterial({
+    color: 0x03b1fc,
+    side: THREE.DoubleSide
+  }));
+  torusKnot1.position.set(-1300, 400, -100);
+  group.add(torusKnot1);
+
+  Showcase2 = new THREE.Mesh(new THREE.CylinderGeometry(200, 150 * 2, 150 * 2, 4, 1), new THREE.MeshLambertMaterial({
+    color: 0x333333,
+    side: THREE.DoubleSide
+  }));
+  Showcase2.rotation.y = Math.PI / 4;
+  Showcase2.position.set(-1300, 150, -100);
+  group.add(Showcase2)
+
+  torusKnot2 = new THREE.Mesh(new THREE.TorusKnotGeometry(140, 44, 30, 3, 13, 15), new THREE.MeshLambertMaterial({
+    color: 0x03b1fc,
+    side: THREE.DoubleSide
+  }));
+  torusKnot2.position.set(-1300, 500, -1500);
+  group.add(torusKnot2);
+
+  Showcase3 = new THREE.Mesh(new THREE.CylinderGeometry(200, 150 * 2, 150 * 2, 4, 1), new THREE.MeshLambertMaterial({
+    color: 0x333333,
+    side: THREE.DoubleSide
+  }));
+  Showcase3.rotation.y = Math.PI / 4;
+  Showcase3.position.set(-1300, 150, -1500);
+  group.add(Showcase3)
+
+  torusKnot3 = new THREE.Mesh(new THREE.TorusKnotGeometry(140, 44, 52, 177, 13, 12), new THREE.MeshLambertMaterial({
+    color: 0x03b1fc,
+    side: THREE.DoubleSide
+  }));
+  torusKnot3.position.set(-3100, 500, -1500);
+  group.add(torusKnot3);
+
+  Showcase4 = new THREE.Mesh(new THREE.CylinderGeometry(200, 150 * 2, 150 * 2, 4, 1), new THREE.MeshLambertMaterial({
+    color: 0x333333,
+    side: THREE.DoubleSide
+  }));
+  Showcase4.rotation.y = Math.PI / 4;
+  Showcase4.position.set(-3100, 150, -1500);
+  group.add(Showcase4)
+
+  var loader = new THREE.TextureLoader();
+  var diagramTex = loader.load("https://i.imgur.com/j4cJGyv.png");
+  diagram = new THREE.Mesh(new THREE.PlaneGeometry(1000, 500), new THREE.MeshLambertMaterial({
+    map: diagramTex
+  }));
+  diagram.position.set(3200, 450, -3770);
+  scene.add(diagram);
+
+  var pictureFrameTex = loader.load("https://i.imgur.com/IU1WFrE.png");
+  pictureFrame = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshLambertMaterial({
+    map: pictureFrameTex,
+    transparent: true
+  }));
+  pictureFrame.position.set(-3000, 450, -4060);
+  scene.add(pictureFrame);
+
+  var drawTex = loader.load("https://i.imgur.com/CfoVKvO.jpg");
+  draw = new THREE.Mesh(new THREE.PlaneGeometry(450, 450), new THREE.MeshLambertMaterial({
+    map: drawTex
+  }));
+  draw.position.set(-3000, 450, -4065);
+  scene.add(draw);
+
+  var draw2Tex = loader.load("https://i.imgur.com/jDIVRDf.jpg");
+  draw2 = new THREE.Mesh(new THREE.PlaneGeometry(550, 450), new THREE.MeshLambertMaterial({
+    map: draw2Tex
+  }));
+  draw2.position.set(1600, 450, -3760);
+  scene.add(draw2);
+
+  pictureFrame2 = new THREE.Mesh(new THREE.PlaneGeometry(700, 600), new THREE.MeshLambertMaterial({
+    map: pictureFrameTex,
+    transparent: true
+  }));
+  pictureFrame2.position.set(1600, 450, -3770);
+  scene.add(pictureFrame2);
+
+  var draw3Tex = loader.load("https://i.imgur.com/dsFvIjZ.jpg");
+  draw3 = new THREE.Mesh(new THREE.PlaneGeometry(550, 450), new THREE.MeshLambertMaterial({
+    map: draw3Tex
+  }));
+  draw3.rotation.y = Math.PI / 2;
+  draw3.position.set(50, 450, -2400);
+  scene.add(draw3);
+
+  pictureFrame3 = new THREE.Mesh(new THREE.PlaneGeometry(700, 600), new THREE.MeshLambertMaterial({
+    map: pictureFrameTex,
+    transparent: true
+  }));
+  pictureFrame3.rotation.y = Math.PI / 2;
+  pictureFrame3.position.set(40, 450, -2400);
+  scene.add(pictureFrame3);
+
+  var ticketofficeTex = loader.load("https://i.imgur.com/sC0E27A.png");
+  ticketoffice = new THREE.Mesh(new THREE.PlaneGeometry(1500, 600), new THREE.MeshLambertMaterial({
+    map: ticketofficeTex
+  }));
+  ticketoffice.position.set(1600, 600, -400);
+  scene.add(ticketoffice);
+
+  lamp1 = new buildlamp(3200, 900, -3200, diagram, 1300, 0.4);
+  lamp1.rotation.x = Math.PI / 4;
+  scene.add(lamp1);
+  lamp2 = new buildlamp(-3200, 900, -3400, draw, 1300, 0.4);
+  lamp2.rotation.x = Math.PI / 4;
+  group.add(lamp2);
+  lamp3 = new buildlamp(1600, 900, -3200, draw2, 1300, 0.4);
+  lamp3.rotation.x = Math.PI / 4;
+  group.add(lamp3);
+  lamp4 = new buildlamp(600, 900, -2400, draw3, 1300, 0.4);
+  lamp4.rotation.z = -Math.PI / 4;
+  group.add(lamp4);
+  lamp5 = new buildlamp(-1300, 1000, -100, torusKnot1, 1300, 0.6);
+  group.add(lamp5);
+  lamp6 = new buildlamp(-1300, 1000, -1500, torusKnot2, 1300, 0.6);
+  group.add(lamp6);
+  lamp8 = new buildlamp(-3100, 1000, -1500, torusKnot3, 1300, 0.6);
+  group.add(lamp8);
+  biglight1 = buildBigLight(-2000, 900, -800, 1.2, 3300, 0.8);
+  group.add(biglight1);
+  biglight2 = buildBigLight(2100, 900, -2700, 1.2, 2500, 0.8);
+  group.add(biglight2);
+  biglight3 = buildBigLight(-1700, 900, -3000, 1.2, 2000, 1);
+  group.add(biglight3);
+  biglight4 = buildBigLight(0, 900, -4000, 1.2, 3000, 1);
+  group.add(biglight4);
+  biglight5 = buildBigLight(1300, 900, -900, 1.2, 3000, 2);
+  group.add(biglight5);
+  biglight6 = buildBigLight(1700, 900, 1000, 1.2, 3000, 2);
+  group.add(biglight6);
+
+  Clock = buildClock();
+  Clock.rotation.x = Math.PI / 2;
+  Clock.rotation.z = Math.PI;
+  Clock.position.set(-3100, 400, -100);
+  scene.add(Clock);
+  lamp7 = new buildlamp(-3100, 1000, -100, Clock, 1300, 0.4);
+  group.add(lamp7);
+  scene.add(group);
+}
+
+function buildBigLight(posx, posy, posz, intensity, distance, decay) {
+  var group = new THREE.Object3D();
+  var Components1 = new THREE.Mesh(new THREE.CylinderGeometry(30, 100, 70, 15, 1, true), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  Components1.rotation.y = Math.PI / 4;
+  Components1.position.set(0, 100, 0);
+  group.add(Components1);
+  var Components2 = new THREE.Mesh(new THREE.SphereGeometry(25), new THREE.MeshLambertMaterial({
+    color: 0xeeeeee,
+    side: THREE.DoubleSide
+  }));
+  Components2.rotation.y = Math.PI / 4;
+  Components2.position.set(0, 80, 0);
+  group.add(Components2);
+
+  var light = new THREE.PointLight(0xffffff, intensity, distance, decay);
+  lightarray.push(light);
+  group.add(light);
+  group.position.set(posx, posy, posz);
+  return group;
+}
+
+function buildChair() {
+  var group = new THREE.Group();
+  var woodTex = new THREE.TextureLoader().load("https://i.imgur.com/DrvlmNW.jpg?1");
+  var mat = new THREE.MeshLambertMaterial({
+    map: woodTex
+  });
+  var boxTop = new THREE.Mesh(new THREE.BoxGeometry(601, 51, 301 / 2), mat);
+  var boxLeg1 = new THREE.Mesh(new THREE.BoxGeometry(50, 150, 150), mat);
+  var boxLeg2 = new THREE.Mesh(new THREE.BoxGeometry(50, 150, 150), mat);
+  boxTop.position.set(0, 250 / 2, 0);
+  boxLeg1.position.set(-275, 150 / 2, 0);
+  boxLeg2.position.set(275, 150 / 2, 0);
+  group.add(boxTop, boxLeg1, boxLeg2);
+  group.rotation.y = Math.PI / 2;
+  return group;
+}
+var camx, camz, min, minpos,
+  ismoving = false;
+var gotoPos = draw.position;
+var thirdPos = camera.position;
+var thirdAt = draw.position;
+
+function gotonear(num) {
+  min = 99999999;
+  camx = camera.position.x;
+  camz = camera.position.z;
+
+  for (let i = 0; i < posarray.length; i++) {
+    if (Math.sqrt((camx - posarray[i][0]) * (camx - posarray[i][0]) + (camz - posarray[i][1]) * (camz - posarray[i][1])) < min) {
+      //console.log(Math.sqrt((camx-posarray[i][0])*(camx-posarray[i][0])+(camz-posarray[i][1])*(camz-posarray[i][1])));
+      min = Math.sqrt((camx - posarray[i][0]) * (camx - posarray[i][0]) + (camz - posarray[i][1]) * (camz - posarray[i][1]));
+      minpos = i;
+    }
+  }
+}
+
+function cameramove() {
+  gotoPos = (new THREE.Vector3(posarray[minpos][0], 550, posarray[minpos][1]));
+  thirdPos = camera.position;
+
+  cameradiagram.position.copy(thirdPos);
+  cameradiagram.lookAt(thirdAt);
+
+
+  if ((thirdPos.x - gotoPos.x) > 20) {
+    camera.position.x -= 30;
+    ismoving = true;
+  }
+  if ((thirdPos.x - gotoPos.x) < -20) {
+    camera.position.x += 30;
+    ismoving = true;
+  }
+  if ((thirdPos.y - gotoPos.y) > 20) {
+    camera.position.y -= 30;
+    ismoving = true;
+  }
+  if ((thirdPos.y - gotoPos.y) < -20) {
+    camera.position.y += 30;
+    ismoving = true;
+  }
+  if ((thirdPos.z - gotoPos.z) > 15) {
+    camera.position.z -= 25;
+    ismoving = true;
+  }
+  if ((thirdPos.z - gotoPos.z) < -15) {
+    camera.position.z += 25;
+    ismoving = true;
+  }
+}
+
+function animate() {
+  //keyboard.update();
+
+
+  if (clockswitch) {
+    var thirdAt = Clock.position;
+    cameramove();
+    if (ismoving === false) {
+      if (minpos != 7) {
+        if (minpos <= 7) {
+          minpos += 1;
+          minpos = minpos % posarray.length;
+        } else {
+          minpos -= 1
+        }
+      } else {
+        thirdAt = Clock.position;
+      }
+    }
+    camera.lookAt(thirdAt);
+    renderer.render(scene, camera);
+    ismoving = false;
+  }
+
+  if (drawswitch2) {
+    var thirdAt = draw2.position;
+    cameramove();
+    if (ismoving === false) {
+      if (minpos != 1) {
+        if (minpos >= 6 || minpos === 0) {
+          minpos += 1;
+          minpos = minpos % posarray.length;
+        } else {
+          minpos -= 1
+        }
+      } else {
+        thirdAt = draw2.position;
+      }
+    }
+    camera.lookAt(thirdAt);
+    renderer.render(scene, camera);
+    ismoving = false;
+  }
+
+  if (drawswitch) {
+    cameramove();
+    var thirdAt = draw.position;
+    if (ismoving === false) {
+      if (minpos != 4) {
+        if (minpos <= 4) {
+          minpos += 1;
+          minpos = minpos % posarray.length;
+        } else {
+          minpos -= 1
+        }
+      } else {
+        thirdAt = draw.position;
+      }
+    }
+    camera.lookAt(thirdAt);
+    renderer.render(scene, camera);
+    ismoving = false;
+  }
+
+  if (designswitch) {
+    cameramove();
+    var thirdAt = diagram.position;
+    if (ismoving === false) {
+      if (minpos != 0) {
+        if (minpos >= 5) {
+          minpos += 1;
+          minpos = minpos % posarray.length;
+        } else {
+          minpos -= 1
+        }
+      } else {
+        thirdAt = diagram.position;
+      }
+    }
+    camera.lookAt(thirdAt);
+    renderer.render(scene, camera);
+    ismoving = false;
+  }
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+function buildClock() { //雜研時鐘
+  var geometry = new THREE.BufferGeometry();
+  var indices = [];
+  var points = [];
+  var colors = [];
+  angle = 0; {
+    for (let i = 0; i < 20; i++) {
+      points.push(60 * Math.cos(angle - Math.PI / 6), 20, 60 * Math.sin(angle));
+      angle += Math.PI / 10; //上面的小20邊橢圓 1
+    }
+    for (let i = 0; i < 20; i++) {
+      points.push(80 * Math.cos(angle - Math.PI / 6), 20, 80 * Math.sin(angle));
+      angle += Math.PI / 10; //上面的大20邊橢圓 1
+    }
+    for (let i = 0; i < 20; i++) {
+      points.push(60 * Math.cos(angle - Math.PI / 6), 10, 60 * Math.sin(angle));
+      angle += Math.PI / 10; //下面的小20邊橢圓 1
+    }
+    for (let i = 0; i < 20; i++) {
+      points.push(80 * Math.cos(angle - Math.PI / 6), 10, 80 * Math.sin(angle));
+      angle += Math.PI / 10; //下面的大20邊橢圓 1   
+    }
+  }
+
+  for (let i = 0; i < 20; i++) {
+    points.push(48 * Math.cos(angle - Math.PI), 21, 48 * Math.sin(angle));
+    angle += Math.PI / 10; //時鐘
+  }
+  for (let i = 0; i < 20; i++) {
+    points.push(48 * Math.cos(angle - Math.PI), 9, 48 * Math.sin(angle));
+    angle += Math.PI / 10; //時鐘
+  } {
+    for (let i = 0; i < 20; i++) {
+      points.push(65 * Math.cos(angle), 19, 65 * Math.sin(angle - Math.PI / 5));
+      angle += Math.PI / 10; //上面的小20邊橢圓 2
+    }
+    for (let i = 0; i < 20; i++) {
+      points.push(85 * Math.cos(angle), 19, 85 * Math.sin(angle - Math.PI / 5));
+      angle += Math.PI / 10; //上面的大20邊橢圓  2  
+    }
+    for (let i = 0; i < 20; i++) {
+      points.push(65 * Math.cos(angle), 11, 65 * Math.sin(angle - Math.PI / 5));
+      angle += Math.PI / 10; //下面的小20邊橢圓 2
+    }
+    for (let i = 0; i < 20; i++) {
+      points.push(85 * Math.cos(angle), 11, 85 * Math.sin(angle - Math.PI / 5));
+      angle += Math.PI / 10; //下面的大20邊橢圓    
+    }
+  }
+  points.push(2, 22, -48, -2, 22, -48, 0, 22, -45); //原點的checker
+  {
+    for (let i = 0; i < 20; i++) {
+      indices.push(i, (i + 1) % 20, (i + 20));
+      indices.push((i + 1) % 20, (i + 20), (i + 21) % 40 + Math.floor((i + 1) / 20) * 20); //上橢圓面
+    }
+    for (let i = 40; i < 60; i++) {
+      indices.push(i, (i + 1) % 60 + Math.floor((i + 1) / 60) * 40, (i + 20));
+      indices.push((i + 1) % 60 + Math.floor((i + 1) / 60) * 40, (i + 20), (i + 21) % 80 + Math.floor((i + 1) / 60) * 60); //下橢圓面
+    }
+    for (let i = 0; i < 20; i++) {
+      indices.push(i, (i + 1) % 20, (i + 40));
+      indices.push((i + 1) % 20, (i + 40), (i + 41) % 60 + Math.floor((i + 41) / 60) * 40);
+    } //內邊
+    for (let i = 20; i < 40; i++) {
+      indices.push(i, (i + 1) % 40 + Math.floor((i + 1) / 40) * 20, (i + 40));
+      indices.push((i + 1) % 40 + Math.floor((i + 1) / 40) * 20, (i + 40), (i + 41) % 80 + Math.floor((i + 1) / 40) * 60); //外邊
+    }
+  } //橢圓1
+  for (let i = 80; i < 99; i++) {
+    indices.push(80, (i + 1), i); //下時鐘
+  }
+  for (let i = 100; i < 119; i++) {
+    indices.push(100, (i + 1), i); //上時鐘
+  }
+  for (let i = 80; i < 100; i++) {
+    indices.push(i, (i + 1) % 100 + Math.floor((i + 1) / 100) * 80, (i + 20));
+    indices.push((i + 1) % 100 + Math.floor((i + 1) / 100) * 80, (i + 20), (i + 21) % 120 + Math.floor((i + 1) / 100) * 100); //時鐘外邊 
+  }
+  for (let i = 120; i < 140; i++) { //橢圓2
+    if (i === 122) i += 3;
+    if (i === 132) i += 3;
+    indices.push(i, (i + 1) % 140 + Math.floor((i + 1) / 140) * 120, (i + 20));
+    indices.push((i + 1) % 140 + Math.floor((i + 1) / 140) * 120, (i + 20), (i + 21) % 160 + Math.floor((i + 21) / 160) * 140); //上橢圓面2
+  }
+  for (let i = 160; i < 180; i++) {
+    if (i === 172) i += 3;
+    if (i === 162) i += 3;
+    indices.push(i, (i + 1) % 180 + Math.floor((i + 1) / 180) * 160, (i + 20));
+    indices.push((i + 1) % 180 + Math.floor((i + 1) / 180) * 160, (i + 20), (i + 21) % 200 + Math.floor((i + 21) / 200) * 180); //下橢圓面2
+  }
+  for (let i = 120; i < 140; i++) {
+    if (i === 132) i += 3;
+    if (i === 122) i += 3;
+    indices.push(i, (i + 1) % 140 + Math.floor((i + 1) / 140) * 120, (i + 40));
+    indices.push((i + 1) % 140 + Math.floor((i + 1) / 140) * 120, (i + 40), (i + 41) % 180 + Math.floor((i + 41) / 180) * 160);
+  } //內邊2
+  for (let i = 140; i < 160; i++) {
+    if (i === 152) i += 3;
+    if (i === 142) i += 3;
+    indices.push(i, (i + 1) % 160 + Math.floor((i + 1) / 160) * 140, (i + 40));
+    indices.push((i + 1) % 160 + Math.floor((i + 1) / 160) * 140, (i + 40), (i + 41) % 200 + Math.floor((i + 41) / 200) * 180); //外邊2
+  }
+  indices.push(200, 201, 202);
+
+  for (let i = 0; i < 40; i++) { //上橢圓1
+    colors.push(240 / 255, 155 / 255, 13 / 255);
+  }
+  for (let i = 0; i < 40; i++) {
+    colors.push(140 / 255, 70 / 255, 17 / 255); //下橢圓1
+  }
+  for (let i = 0; i < 20; i++) {
+    colors.push(171 / 255, 171 / 255, 171 / 255); //上時鐘
+  }
+  for (let i = 0; i < 20; i++) {
+    colors.push(0 / 255, 0 / 255, 0 / 255); //下時鐘
+  }
+  for (let i = 0; i < 40; i++) {
+    colors.push(233 / 255, 45 / 255, 95 / 255); //上橢圓2
+  }
+  for (let i = 0; i < 40; i++) {
+    colors.push(120 / 255, 12 / 255, 17 / 255); //下橢圓2
+  }
+
+  points.push(-3, 25, 0, -3, 20, 0, 0, 25, -45, 0, 20, -45, 3, 25, 0, 3, 20, 0);
+
+  indices.push(203 + 0, 203 + 1, 203 + 4, 203 + 1, 203 + 4, 203 + 5, 203 + 1, 203 + 3, 203 + 5, 203 + 0, 203 + 2, 203 + 4, 203 + 0, 203 + 1, 203 + 2, 203 + 1, 203 + 2, 203 + 3, 203 + 2, 203 + 3, 203 + 4, 203 + 3, 203 + 4, 203 + 5);
+
+  geometry.setIndex(indices);
+  geometry.computeBoundingSphere();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.computeVertexNormals();
+  let material = new THREE.MeshBasicMaterial({ //有試著用過金屬打燈 但效果不理想
+    color: 'white',
+    vertexColors: true,
+    //flatShading: false,
+    side: THREE.DoubleSide
+  });
+  let pointer = new THREE.Mesh(geometry, material);
+
+
+  return pointer;
+
+}
+
+
+</script>
+</body>
+</html>
+
