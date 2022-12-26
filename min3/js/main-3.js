@@ -124,37 +124,37 @@ text.rotation.z+=Math.PI/20
 }
 
 if(counter===250){
-text.position.set(-50,-50,11)
+text.position.set(-50,-50,40)
 var text2=text.clone();
 scene.add(text2)
 }
 if(counter===260){
-text.position.set(-30,-30,12)
+text.position.set(-25,-25,35)
 var text2=text.clone();
 scene.add(text2)
 }
 if(counter===270){
-text.position.set(-10,-10,13)
+text.position.set(0,0,30)
 var text2=text.clone();
 scene.add(text2)
 }
 if(counter===280){
-text.position.set(10,10,14)
+text.position.set(25,25,25)
 var text2=text.clone();
 scene.add(text2)
 }
 if(counter===290){
-text.position.set(30,30,16)
+text.position.set(50,50,20)
 var text2=text.clone();
 scene.add(text2)
 }
 if(counter===300){
-text.position.set(50,50,17)
+text.position.set(75,75,15)
 var text2=text.clone();
 scene.add(text2)
 }
 if(counter===310){
-text.position.set(70,70,18)
+text.position.set(100,100,11)
 
 }
 
